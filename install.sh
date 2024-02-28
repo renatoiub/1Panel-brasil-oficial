@@ -20,7 +20,7 @@ cat << EOF
  ╚═╝    ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝
 EOF
 
-log "======================= Início da Instalação ======================="
+log "======================= Início da Instalação 1Painel BRASIL======================="
 
 function Check_Root() {
   if [[ $EUID -ne 0 ]]; then
