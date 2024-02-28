@@ -339,7 +339,7 @@ function Get_Ip(){
 
 function Show_Result(){
     log ""
-    log "================= Obrigado por sua paciência, a instalação foi concluída com sucesso ================="
+    log "================= Obrigado por sua paciência, a instalação do 1Panel foi concluída com sucesso ================="
     log ""
     log "Acesse o painel pelo seu navegador:"
     log "Endereço externo: http://$PUBLIC_IP:$PANEL_PORT/$PANEL_ENTRANCE"
