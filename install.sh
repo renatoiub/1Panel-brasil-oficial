@@ -1,51 +1,66 @@
 #!/bin/bash
 
+CURRENT_DIR=$(
+    cd "$(dirname "$0")"
+    pwd
+)
+
 function log() {
     message="[1Panel Log]: $1 "
     echo -e "${message}" 2>&1 | tee -a ${CURRENT_DIR}/install.log
 }
 
-log "======================= Iniciando a Instalação ======================="
+echo
+cat << EOF
+ ██╗    ██████╗  █████╗ ███╗   ██╗███████╗██╗     
+███║    ██╔══██╗██╔══██╗████╗  ██║██╔════╝██║     
+╚██║    ██████╔╝███████║██╔██╗ ██║█████╗  ██║     
+ ██║    ██╔═══╝ ██╔══██║██║╚██╗██║██╔══╝  ██║     
+ ██║    ██║     ██║  ██║██║ ╚████║███████╗███████╗
+ ╚═╝    ╚═╝     ╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚══════╝
+EOF
+
+log "======================= Início da Instalação ======================="
 
 function Check_Root() {
   if [[ $EUID -ne 0 ]]; then
-    echo "Por favor, execute este script como root ou utilize sudo."
+    echo "Por favor, execute este script com privilégios de root ou sudo."
     exit 1
   fi
 }
 
 function Prepare_System(){
     if which 1panel >/dev/null 2>&1; then
-        log "O Painel de Administração de Servidores Linux 1Panel já está instalado. Não é necessário instalar novamente."
+        log "O painel de administração 1Panel para servidores Linux já está instalado. Não é possível instalar novamente."
         exit 1
     fi
 }
 
 function Set_Dir(){
-    if read -t 120 -p "Defina o diretório de instalação do 1Panel (padrão é /opt so mecher se souber oque ta fazendo):" PANEL_BASE_DIR;then
+    if read -t 120 -p "Defina o diretório de instalação do 1Panel (padrão é /opt): " PANEL_BASE_DIR;then
         if [[ "$PANEL_BASE_DIR" != "" ]];then
             if [[ "$PANEL_BASE_DIR" != /* ]];then
-                log "Por favor, insira o caminho completo para o diretório."
+                log "Por favor, insira o caminho completo do diretório."
                 Set_Dir
             fi
 
             if [[ ! -d $PANEL_BASE_DIR ]];then
                 mkdir -p $PANEL_BASE_DIR
-                log "O diretório de instalação selecionado é $PANEL_BASE_DIR"
+                log "O diretório de instalação selecionado é: $PANEL_BASE_DIR"
             fi
         else
             PANEL_BASE_DIR=/opt
-            log "O diretório de instalação selecionado é $PANEL_BASE_DIR"
+            log "O diretório de instalação selecionado é: $PANEL_BASE_DIR"
         fi
     else
         PANEL_BASE_DIR=/opt
-        log "(O tempo para definir o diretório expirou, utilizando o diretório padrão /opt)"
+        log "(Tempo esgotado para a definição, usando o diretório padrão /opt)"
     fi
 }
 
 function Install_Docker(){
     if which docker >/dev/null 2>&1; then
-        log "Docker está instalado. Pulando a instalação."
+        log "Docker já está instalado. Pulando etapa de instalação."
         log "Iniciando o Docker."
         systemctl start docker 2>&1 | tee -a ${CURRENT_DIR}/install.log
     else
@@ -86,12 +101,12 @@ function Install_Docker(){
             done
 
             if [ -n "$selected_source" ]; then
-                echo "Selecionando a fonte com o menor atraso $selected_source, atraso de $min_delay segundos"
+                echo "Selecionando fonte com menor atraso $selected_source, atraso é de $min_delay segundos"
                 export DOWNLOAD_URL="$selected_source"
                 curl -fsSL "https://get.docker.com" -o get-docker.sh
                 sh get-docker.sh 2>&1 | tee -a ${CURRENT_DIR}/install.log
 
-                log "... Iniciando o Docker."
+                log "... Iniciando o Docker"
                 systemctl enable docker; systemctl daemon-reload; systemctl start docker 2>&1 | tee -a ${CURRENT_DIR}/install.log
 
                 docker_config_folder="/etc/docker"
@@ -101,7 +116,7 @@ function Install_Docker(){
 
                 docker version >/dev/null 2>&1
                 if [[ $? -ne 0 ]]; then
-                    log "A instalação do Docker falhou."
+                    log "Falha na instalação do Docker."
                     exit 1
                 else
                     log "Docker instalado com sucesso."
@@ -111,12 +126,12 @@ function Install_Docker(){
                 exit 1
             fi
         else
-            log "Fora da China, nenhuma alteração de fonte é necessária."
+            log "Não é a região da China, sem necessidade de alterar a fonte."
             export DOWNLOAD_URL="https://download.docker.com"
             curl -fsSL "https://get.docker.com" -o get-docker.sh
             sh get-docker.sh 2>&1 | tee -a ${CURRENT_DIR}/install.log
 
-            log "... Iniciando o Docker."
+            log "... Iniciando o Docker"
             systemctl enable docker; systemctl daemon-reload; systemctl start docker 2>&1 | tee -a ${CURRENT_DIR}/install.log
 
             docker_config_folder="/etc/docker"
@@ -126,7 +141,7 @@ function Install_Docker(){
 
             docker version >/dev/null 2>&1
             if [[ $? -ne 0 ]]; then
-                log "A instalação do Docker falhou."
+                log "Falha na instalação do Docker."
                 exit 1
             else
                 log "Docker instalado com sucesso."
@@ -138,7 +153,7 @@ function Install_Docker(){
 function Install_Compose(){
     docker-compose version >/dev/null 2>&1
     if [[ $? -ne 0 ]]; then
-        log "... Instalando o docker-compose online"
+        log "... Instalando docker-compose online"
         
         arch=$(uname -m)
         if [ "$arch" == 'armv7l' ]; then
@@ -146,7 +161,7 @@ function Install_Compose(){
         fi
         curl -L https://resource.fit2cloud.com/docker/compose/releases/download/v2.22.0/docker-compose-$(uname -s | tr A-Z a-z)-$arch -o /usr/local/bin/docker-compose 2>&1 | tee -a ${CURRENT_DIR}/install.log
         if [[ ! -f /usr/local/bin/docker-compose ]];then
-            log "Falha ao baixar docker-compose. Por favor, tente novamente."
+            log "Falha ao baixar docker-compose, por favor, tente novamente mais tarde."
             exit 1
         fi
         chmod +x /usr/local/bin/docker-compose
@@ -162,15 +177,15 @@ function Install_Compose(){
     else
         compose_v=`docker-compose -v`
         if [[ $compose_v =~ 'docker-compose' ]];then
-            read -p "Foi detectado que uma versão mais antiga do Docker Compose está instalada (deve ser superior ou igual a v2.0.0), você deseja atualizar [s/n] : " UPGRADE_DOCKER_COMPOSE
-            if [[ "$UPGRADE_DOCKER_COMPOSE" == "s" ]] || [[ "$UPGRADE_DOCKER_COMPOSE" == "S" ]]; then
+            read -p "Detectado que o Docker Compose está instalado, mas a versão é mais antiga (deve ser maior ou igual a v2.0.0). Deseja atualizar [s/n] : " UPGRADE_DOCKER_COMPOSE
+            if [[ "$UPGRADE_DOCKER_COMPOSE" == "S" ]] || [[ "$UPGRADE_DOCKER_COMPOSE" == "s" ]]; then
                 rm -rf /usr/local/bin/docker-compose /usr/bin/docker-compose
                 Install_Compose
             else
-                log "A versão atual do Docker Compose é $compose_v, o que pode afetar o funcionamento adequado da Loja de Aplicativos."
+                log "A versão do Docker Compose é $compose_v, o que pode afetar o funcionamento da loja de aplicativos."
             fi
         else
-            log "Foi detectado que o Docker Compose está instalado. Pulando a instalação."
+            log "Docker Compose já está instalado. Pulando etapa de instalação."
         fi
     fi
 }
@@ -179,14 +194,14 @@ function Set_Port(){
     DEFAULT_PORT=`expr $RANDOM % 55535 + 10000`
 
     while true; do
-        read -p "Defina a porta do 1Panel (padrão é $DEFAULT_PORT):" PANEL_PORT
+        read -p "Defina a porta do 1Panel (padrão é $DEFAULT_PORT): " PANEL_PORT
 
         if [[ "$PANEL_PORT" == "" ]];then
             PANEL_PORT=$DEFAULT_PORT
         fi
 
         if ! [[ "$PANEL_PORT" =~ ^[1-9][0-9]{0,4}$ && "$PANEL_PORT" -le 65535 ]]; then
-            echo "Erro: A porta deve estar entre 1 e 65535"
+            echo "Erro: a porta inserida deve estar entre 1 e 65535."
             continue
         fi
 
@@ -202,7 +217,7 @@ function Set_Firewall(){
             firewall-cmd --zone=public --add-port=$PANEL_PORT/tcp --permanent
             firewall-cmd --reload
         else
-            log "Firewall não está ativado, ignorando a abertura de porta."
+            log "Firewall não está ativo. Ignorando a abertura da porta."
         fi
     fi
 
@@ -212,7 +227,7 @@ function Set_Firewall(){
             ufw allow $PANEL_PORT/tcp
             ufw reload
         else
-            log "Firewall não está ativado, ignorando a abertura de porta."
+            log "Firewall não está ativo. Ignorando a abertura da porta."
         fi
     fi
 }
@@ -221,18 +236,18 @@ function Set_Username(){
     DEFAULT_USERNAME=`cat /dev/urandom | head -n 16 | md5sum | head -c 10`
 
     while true; do
-        read -p "Defina o nome de usuário do 1Panel (padrão é $DEFAULT_USERNAME):" PANEL_USERNAME
+        read -p "Defina o usuário do 1Panel (padrão é $DEFAULT_USERNAME): " PANEL_USERNAME
 
         if [[ "$PANEL_USERNAME" == "" ]];then
             PANEL_USERNAME=$DEFAULT_USERNAME
         fi
 
         if [[ ! "$PANEL_USERNAME" =~ ^[a-zA-Z0-9_]{3,30}$ ]]; then
-            echo "Erro: O nome de usuário só pode conter letras, números e sublinhados, com comprimento de 3 a 30 caracteres."
+            echo "Erro: o usuário deve conter apenas letras, números e sublinhados, com comprimento entre 3 e 30 caracteres."
             continue
         fi
 
-        log "Nome de usuário definido: $PANEL_USERNAME"
+        log "Usuário definido: $PANEL_USERNAME"
         break
     done
 }
@@ -241,7 +256,7 @@ function Set_Password(){
     DEFAULT_PASSWORD=`cat /dev/urandom | head -n 16 | md5sum | head -c 10`
 
     while true; do
-        echo "Defina a senha do 1Panel (padrão é $DEFAULT_PASSWORD):"
+        echo "Defina a senha do 1Panel (padrão é $DEFAULT_PASSWORD): "
         read -s PANEL_PASSWORD
 
         if [[ "$PANEL_PASSWORD" == "" ]];then
@@ -249,7 +264,7 @@ function Set_Password(){
         fi
 
         if [[ ! "$PANEL_PASSWORD" =~ ^[a-zA-Z0-9_!@#$%*,.?]{8,30}$ ]]; then
-            echo "Erro: A senha deve conter apenas letras, números e caracteres especiais (!@#$%*_,.?), com comprimento entre 8 e 30 caracteres."
+            echo "Erro: a senha deve conter apenas letras, números e caracteres especiais (!@#$%*_,.?), com comprimento entre 8 e 30 caracteres."
             continue
         fi
 
@@ -258,7 +273,7 @@ function Set_Password(){
 }
 
 function Init_Panel(){
-    log "Configurando o Serviço 1Panel"
+    log "Configurando o serviço do 1Panel."
 
     RUN_BASE_DIR=$PANEL_BASE_DIR/1panel
     mkdir -p $RUN_BASE_DIR
@@ -287,7 +302,7 @@ function Init_Panel(){
 
     systemctl enable 1panel; systemctl daemon-reload 2>&1 | tee -a ${CURRENT_DIR}/install.log
 
-    log "Iniciando o Serviço 1Panel"
+    log "Iniciando o serviço do 1Panel."
     systemctl start 1panel | tee -a ${CURRENT_DIR}/install.log
 
     for b in {1..30}
@@ -295,10 +310,10 @@ function Init_Panel(){
         sleep 3
         service_status=`systemctl status 1panel 2>&1 | grep Active`
         if [[ $service_status == *running* ]];then
-            log "Serviço 1Panel iniciado com sucesso!"
+            log "1Panel iniciado com sucesso!"
             break;
         else
-            log "Erro ao iniciar o serviço 1Panel!"
+            log "Erro ao iniciar o serviço do 1Panel!"
             exit 1
         fi
     done
@@ -324,21 +339,22 @@ function Get_Ip(){
 
 function Show_Result(){
     log ""
-    log "================= Obrigado por sua paciência, a instalação foi concluída =================="
+    log "================= Obrigado por sua paciência, a instalação foi concluída com sucesso ================="
     log ""
-    log "Por favor, acesse o painel pelo navegador:"
-    log "Endereço público: http://$PUBLIC_IP:$PANEL_PORT/$PANEL_ENTRANCE"
-    log "Endereço local: http://$LOCAL_IP:$PANEL_PORT/$PANEL_ENTRANCE"
+    log "Acesse o painel pelo seu navegador:"
+    log "Endereço externo: http://$PUBLIC_IP:$PANEL_PORT/$PANEL_ENTRANCE"
+    log "Endereço interno: http://$LOCAL_IP:$PANEL_PORT/$PANEL_ENTRANCE"
     log "Usuário do painel: $PANEL_USERNAME"
     log "Senha do painel: $PANEL_PASSWORD"
     log ""
-    log "Site do Projeto: https://1panel.cn"
+    log "Site do projeto: https://1panel.cn"
     log "Documentação: https://1panel.cn/docs"
-    log "Repositório de Código: https://github.com/1Panel-dev/1Panel"
+    log "Repositório do código Brasil : https://github.com/1Panel-dev/1Panel"
+    log "Repositório do código Chines : https://github.com/jefferson-system-help-oficial/1Panel-brasil-oficial"
     log ""
     log "Se estiver usando um servidor em nuvem, abra a porta $PANEL_PORT no grupo de segurança."
     log ""
-    log "================================================================"
+    log "=================================================================================================="
 }
 
 function main(){
