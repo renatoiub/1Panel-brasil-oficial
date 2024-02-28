@@ -5,30 +5,30 @@ args=$@
 
 BASE_DIR=/opt
 ORIGINAL_PORT=9999
-ORIGINAL_VERSION=v1.9.6
+ORIGINAL_VERSION=v1.10.0-lts
 ORIGINAL_ENTRANCE=entrance
 ORIGINAL_USERNAME=username
 ORIGINAL_PASSWORD=password
 
 function usage() {
-    echo "Script de Controle do 1Panel"
+    echo "1Panel 控制脚本"
     echo
-    echo "Uso: "
-    echo "  ./1pctl [COMANDO] [ARGS...]"
+    echo "Usage: "
+    echo "  ./1pctl [COMMAND] [ARGS...]"
     echo "  ./1pctl --help"
     echo
-    echo "Comandos: "
-    echo "  status              Verifica o status do serviço 1Panel"
-    echo "  start               Inicia o serviço 1Panel"
-    echo "  stop                Para o serviço 1Panel"
-    echo "  restart             Reinicia o serviço 1Panel"
-    echo "  uninstall           Desinstala o serviço 1Panel"
-    echo "  user-info           Obtém informações do usuário 1Panel"
-    echo "  listen-ip           Altera o IP de escuta do 1Panel"
-    echo "  version             Exibe informações da versão do 1Panel"
-    echo "  update              Atualiza informações do sistema 1Panel"
-    echo "  reset               Reseta informações do sistema 1Panel"
-    echo "  restore             Restaura o serviço e dados do 1Panel"
+    echo "Commands: "
+    echo "  status              查看 1Panel 服务运行状态"
+    echo "  start               启动 1Panel 服务"
+    echo "  stop                停止 1Panel 服务"
+    echo "  restart             重启 1Panel 服务"
+    echo "  uninstall           卸载 1Panel 服务"
+    echo "  user-info           获取 1Panel 用户信息"
+    echo "  listen-ip           切换 1Panel 监听 IP"
+    echo "  version             查看 1Panel 版本信息"
+    echo "  update              修改 1Panel 系统信息"
+    echo "  reset               重置 1Panel 系统信息"
+    echo "  restore             恢复 1Panel 服务及数据"
 }
 function status() {
     systemctl status 1panel.service
@@ -46,25 +46,25 @@ function restart() {
     status
 }
 function uninstall() {
-    read -p "A desinstalação removerá completamente o serviço e o diretório de dados do 1Panel, deseja continuar [s/n] : " yn
+    read -p "卸载将会完全清除 1Panel 服务和数据目录，是否继续 [y/n] : " yn
     if [ "$yn" == "Y" ] || [ "$yn" == "y" ]; then
-        echo -e "================== Iniciando Desinstalação do Painel de Gerenciamento de Servidores Linux 1Panel =================="
+        echo -e "================== 开始卸载 1Panel Linux 服务器运维管理面板 =================="
         echo -e ""
-        echo -e "1) Parando o serviço 1Panel..."
+        echo -e "1) 停止 1Panel 服务进程..."
         systemctl stop 1panel.service
     else
         exit 0
     fi
 
-    echo -e "2) Removendo o serviço e o diretório de dados do 1Panel..."
+    echo -e "2) 删除 1Panel 服务和数据目录..."
     rm -rf $BASE_DIR/1panel /usr/local/bin/{1pctl,1panel} /etc/systemd/system/1panel.service
 
-    echo -e "3) Recarregando arquivo de configuração do serviço..."
+    echo -e "3) 重新加载服务配置文件..."
     systemctl daemon-reload
     systemctl reset-failed
 
     echo -e ""
-    echo -e "================================== Desinstalação Concluída =================================="
+    echo -e "================================== 卸载完成 =================================="
 }
 function user-info() {
     1panel user-info
@@ -81,7 +81,7 @@ function listen_ipv6() {
     restart
 }
 function restore() {
-    read -p "O 1Panel será restaurado para a versão estável anterior, deseja continuar [s/n] : " yn
+    read -p "1Panel 将会恢复至上一个稳定版本，是否继续 [y/n] : " yn
     if [ "$yn" == "Y" ] || [ "$yn" == "y" ]; then
         echo -e ""
         1panel restore
@@ -215,7 +215,7 @@ function main() {
             usage
             ;;
         *)
-        echo "Parâmetro não suportado, utilize 'help' ou '--help' para obter ajuda"
+        echo "不支持的参数，请使用 help 或 --help 参数获取帮助"
     esac
 }
 main
